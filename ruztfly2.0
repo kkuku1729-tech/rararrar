@@ -1,0 +1,371 @@
+-- RAGE MOD Fly Hack UI для Roblox режим ruzt (Фиолетовая версия с вводом скорости)
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Fly Hack переменные
+local Flying = false
+local FlySpeed = 50
+local BodyVelocity
+local BodyGyro
+local MenuVisible = true
+
+-- Цветовая схема (фиолетовые тона)
+local COLOR_PRIMARY = Color3.fromRGB(106, 13, 173)
+local COLOR_SECONDARY = Color3.fromRGB(147, 51, 234)
+local COLOR_ACCENT = Color3.fromRGB(192, 132, 252)
+local COLOR_BACKGROUND = Color3.fromRGB(30, 25, 40)
+local COLOR_TEXT = Color3.fromRGB(255, 255, 255)
+
+-- Создание красивого GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RAGEModFlyUI"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 450, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
+MainFrame.BackgroundColor3 = COLOR_BACKGROUND
+MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+-- Эффект свечения
+local Glow = Instance.new("UIStroke")
+Glow.Name = "Glow"
+Glow.Color = COLOR_ACCENT
+Glow.Thickness = 3
+Glow.Transparency = 0.3
+Glow.Parent = MainFrame
+
+-- Заголовок
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 60)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = COLOR_PRIMARY
+Title.BackgroundTransparency = 0.1
+Title.Text = "[⚡] RAGE MOD FLY HACK"
+Title.TextColor3 = COLOR_TEXT
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.TextStrokeTransparency = 0.5
+Title.Parent = MainFrame
+
+-- Эффект градиента для заголовка
+local TitleGradient = Instance.new("UIGradient")
+TitleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, COLOR_PRIMARY),
+    ColorSequenceKeypoint.new(1, COLOR_SECONDARY)
+})
+TitleGradient.Rotation = 45
+TitleGradient.Parent = Title
+
+-- Кнопка Fly Hack
+local FlyButton = Instance.new("TextButton")
+FlyButton.Name = "FlyButton"
+FlyButton.Size = UDim2.new(0.8, 0, 0, 70)
+FlyButton.Position = UDim2.new(0.1, 0, 0.2, 0)
+FlyButton.BackgroundColor3 = COLOR_PRIMARY
+FlyButton.Text = "🚀 FLY HACK: OFF"
+FlyButton.TextColor3 = COLOR_TEXT
+FlyButton.TextScaled = true
+FlyButton.Font = Enum.Font.GothamBold
+FlyButton.TextSize = 18
+FlyButton.Parent = MainFrame
+
+-- Скругление кнопки
+local FlyButtonCorner = Instance.new("UICorner")
+FlyButtonCorner.CornerRadius = UDim.new(0, 12)
+FlyButtonCorner.Parent = FlyButton
+
+-- Поле ввода скорости
+local SpeedInputFrame = Instance.new("Frame")
+SpeedInputFrame.Name = "SpeedInputFrame"
+SpeedInputFrame.Size = UDim2.new(0.8, 0, 0, 60)
+SpeedInputFrame.Position = UDim2.new(0.1, 0, 0.45, 0)
+SpeedInputFrame.BackgroundColor3 = COLOR_SECONDARY
+SpeedInputFrame.BackgroundTransparency = 0.2
+SpeedInputFrame.Parent = MainFrame
+
+local SpeedInputCorner = Instance.new("UICorner")
+SpeedInputCorner.CornerRadius = UDim.new(0, 8)
+SpeedInputCorner.Parent = SpeedInputFrame
+
+local SpeedInputLabel = Instance.new("TextLabel")
+SpeedInputLabel.Name = "SpeedInputLabel"
+SpeedInputLabel.Size = UDim2.new(0.4, 0, 1, 0)
+SpeedInputLabel.Position = UDim2.new(0, 0, 0, 0)
+SpeedInputLabel.BackgroundTransparency = 1
+SpeedInputLabel.Text = "⚡ Скорость:"
+SpeedInputLabel.TextColor3 = COLOR_TEXT
+SpeedInputLabel.TextScaled = true
+SpeedInputLabel.Font = Enum.Font.GothamBold
+SpeedInputLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedInputLabel.Parent = SpeedInputFrame
+
+local SpeedInputBox = Instance.new("TextBox")
+SpeedInputBox.Name = "SpeedInputBox"
+SpeedInputBox.Size = UDim2.new(0.5, 0, 0.7, 0)
+SpeedInputBox.Position = UDim2.new(0.45, 0, 0.15, 0)
+SpeedInputBox.BackgroundColor3 = COLOR_BACKGROUND
+SpeedInputBox.BackgroundTransparency = 0.3
+SpeedInputBox.TextColor3 = COLOR_TEXT
+SpeedInputBox.Text = tostring(FlySpeed)
+SpeedInputBox.TextScaled = true
+SpeedInputBox.Font = Enum.Font.GothamBold
+SpeedInputBox.PlaceholderText = "Введите скорость"
+SpeedInputBox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+SpeedInputBox.Parent = SpeedInputFrame
+
+local SpeedInputBoxCorner = Instance.new("UICorner")
+SpeedInputBoxCorner.CornerRadius = UDim.new(0, 6)
+SpeedInputBoxCorner.Parent = SpeedInputBox
+
+-- Кнопка применения скорости
+local ApplySpeedButton = Instance.new("TextButton")
+ApplySpeedButton.Name = "ApplySpeedButton"
+ApplySpeedButton.Size = UDim2.new(0.8, 0, 0, 50)
+ApplySpeedButton.Position = UDim2.new(0.1, 0, 0.65, 0)
+ApplySpeedButton.BackgroundColor3 = COLOR_ACCENT
+ApplySpeedButton.Text = "✅ ПРИМЕНИТЬ СКОРОСТЬ"
+ApplySpeedButton.TextColor3 = COLOR_TEXT
+ApplySpeedButton.TextScaled = true
+ApplySpeedButton.Font = Enum.Font.GothamBold
+ApplySpeedButton.Parent = MainFrame
+
+local ApplySpeedCorner = Instance.new("UICorner")
+ApplySpeedCorner.CornerRadius = UDim.new(0, 8)
+ApplySpeedCorner.Parent = ApplySpeedButton
+
+-- Информационная панель
+local InfoFrame = Instance.new("Frame")
+InfoFrame.Name = "InfoFrame"
+InfoFrame.Size = UDim2.new(0.8, 0, 0, 40)
+InfoFrame.Position = UDim2.new(0.1, 0, 0.85, 0)
+InfoFrame.BackgroundColor3 = COLOR_SECONDARY
+InfoFrame.BackgroundTransparency = 0.3
+InfoFrame.Parent = MainFrame
+
+local InfoCorner = Instance.new("UICorner")
+InfoCorner.CornerRadius = UDim.new(0, 6)
+InfoCorner.Parent = InfoFrame
+
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Name = "InfoLabel"
+InfoLabel.Size = UDim2.new(1, 0, 1, 0)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "INSERT - Открыть/Закрыть меню"
+InfoLabel.TextColor3 = COLOR_ACCENT
+InfoLabel.TextScaled = true
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.Parent = InfoFrame
+
+-- Функции анимации
+local function animateButton(button)
+    local originalSize = button.Size
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    
+    button.MouseEnter:Connect(function()
+        local tween = TweenService:Create(button, tweenInfo, {
+            Size = originalSize + UDim2.new(0, 8, 0, 8),
+            BackgroundColor3 = COLOR_ACCENT
+        })
+        tween:Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        local tween = TweenService:Create(button, tweenInfo, {
+            Size = originalSize,
+            BackgroundColor3 = button == ApplySpeedButton and COLOR_ACCENT or COLOR_PRIMARY
+        })
+        tween:Play()
+    end)
+end
+
+-- Применяем анимации ко всем кнопкам
+animateButton(FlyButton)
+animateButton(ApplySpeedButton)
+
+-- Функция переключения видимости меню
+local function toggleMenu()
+    MenuVisible = not MenuVisible
+    
+    if MenuVisible then
+        -- Анимация появления
+        MainFrame.Visible = true
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 450, 0, 350),
+            Position = UDim2.new(0.5, -225, 0.5, -175)
+        })
+        tween:Play()
+    else
+        -- Анимация исчезновения
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0),
+            Position = UDim2.new(0.5, 0, 0.5, 0)
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            MainFrame.Visible = false
+        end)
+    end
+end
+
+-- Функция применения скорости
+local function applySpeed()
+    local newSpeed = tonumber(SpeedInputBox.Text)
+    if newSpeed and newSpeed > 0 then
+        FlySpeed = newSpeed
+        SpeedInputBox.Text = tostring(FlySpeed)
+        
+        -- Анимация успешного применения
+        ApplySpeedButton.Text = "✅ СКОРОСТЬ УСТАНОВЛЕНА!"
+        wait(1)
+        ApplySpeedButton.Text = "✅ ПРИМЕНИТЬ СКОРОСТЬ"
+    else
+        -- Анимация ошибки
+        ApplySpeedButton.Text = "❌ НЕВЕРНОЕ ЗНАЧЕНИЕ!"
+        ApplySpeedButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        wait(1)
+        ApplySpeedButton.Text = "✅ ПРИМЕНИТЬ СКОРОСТЬ"
+        ApplySpeedButton.BackgroundColor3 = COLOR_ACCENT
+        SpeedInputBox.Text = tostring(FlySpeed)
+    end
+end
+
+-- Функция Fly Hack
+local function toggleFly()
+    Flying = not Flying
+    
+    if Flying then
+        FlyButton.Text = "🚀 FLY HACK: ON"
+        FlyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 83)
+        
+        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+        
+        BodyVelocity = Instance.new("BodyVelocity")
+        BodyGyro = Instance.new("BodyGyro")
+        
+        BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        BodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+        BodyVelocity.Parent = HumanoidRootPart
+        
+        BodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)
+        BodyGyro.P = 100000
+        BodyGyro.D = 1000
+        BodyGyro.Parent = HumanoidRootPart
+        
+        -- Анимация полета
+        local flyConnection
+        flyConnection = RunService.Heartbeat:Connect(function()
+            if not Flying then
+                flyConnection:Disconnect()
+                return
+            end
+            
+            local camera = workspace.CurrentCamera
+            BodyGyro.CFrame = camera.CFrame
+            
+            local direction = Vector3.new()
+            
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                direction = direction + camera.CFrame.LookVector
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                direction = direction - camera.CFrame.LookVector
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                direction = direction - camera.CFrame.RightVector
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                direction = direction + camera.CFrame.RightVector
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                direction = direction + Vector3.new(0, 1, 0)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                direction = direction - Vector3.new(0, 1, 0)
+            end
+            
+            BodyVelocity.Velocity = direction * FlySpeed
+        end)
+        
+    else
+        FlyButton.Text = "🚀 FLY HACK: OFF"
+        FlyButton.BackgroundColor3 = COLOR_PRIMARY
+        
+        if BodyVelocity then
+            BodyVelocity:Destroy()
+            BodyVelocity = nil
+        end
+        if BodyGyro then
+            BodyGyro:Destroy()
+            BodyGyro = nil
+        end
+    end
+end
+
+-- Обработчики событий
+FlyButton.MouseButton1Click:Connect(toggleFly)
+ApplySpeedButton.MouseButton1Click:Connect(applySpeed)
+
+-- Обработка ввода в текстовое поле
+SpeedInputBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        applySpeed()
+    end
+end)
+
+-- Обработка горячих клавиш
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.Insert then
+        toggleMenu()
+    elseif input.KeyCode == Enum.KeyCode.F then
+        toggleFly()
+    end
+end)
+
+-- Анимация свечения
+coroutine.wrap(function()
+    while ScreenGui.Parent do
+        for i = 1, 15 do
+            if Glow then
+                Glow.Transparency = 0.2 + (i * 0.05)
+                wait(0.08)
+            end
+        end
+        for i = 1, 15 do
+            if Glow then
+                Glow.Transparency = 0.95 - (i * 0.05)
+                wait(0.08)
+            end
+        end
+    end
+end)()
+
+-- Анимация градиента заголовка
+coroutine.wrap(function()
+    while ScreenGui.Parent do
+        for i = 0, 360, 2 do
+            if TitleGradient then
+                TitleGradient.Rotation = i
+                wait(0.05)
+            end
+        end
+    end
+end)()
+
+warn("[⚡] RAGE MOD Fly Hack загружен!")
+warn("Цветовая схема: Фиолетовая")
+warn("Горячие клавиши:")
+warn("INSERT - Открыть/Закрыть меню")
+warn("F - Вкл/Выкл Fly Hack")
+warn("Введите нужную скорость в поле и нажмите ПРИМЕНИТЬ")
