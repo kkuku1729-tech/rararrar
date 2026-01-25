@@ -25,7 +25,7 @@ print("📁 Создание плейлистов и обмен музыкой")
 print("=" * 60)
 
 # Токен бота
-TOKEN = "8369697873:AAGp7Zz-TSX16IJj-G1ehijP_IsdQVJJbiQ"
+TOKEN = ""
 
 try:
     from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
